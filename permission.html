@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инструкция по устранению ошибок доступа</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Инструкция по устранению ошибок доступа к файлам и папкам</h1>
+
+    <h2>Проблема</h2>
+    <p>При работе с Nginx и PHP-FPM в контейнере или на основной системе могут возникать ошибки доступа к файлам и папкам. Ошибки могут проявляться в виде сообщений о запрещённом доступе или ошибках 403 и 404.</p>
+
+    <h2>Диагностика</h2>
+    <ol>
+        <li><strong>Проверьте права доступа к файлам и папкам:</strong>
+            <pre><code>ls -ld /run/media/deck/SN512/SERVER/DOMAINS/test.local</code></pre>
+        </li>
+        <li><strong>Проверьте владельца и группу файлов и папок:</strong>
+            <pre><code>ls -l /run/media/deck/SN512/SERVER/DOMAINS/test.local</code></pre>
+        </li>
+        <li><strong>Проверьте процесс PHP-FPM и Nginx:</strong>
+            <pre><code>ps aux | grep nginx</code></pre>
+            <pre><code>ps aux | grep php-fpm</code></pre>
+        </li>
+        <li><strong>Проверьте монтирование файловых систем:</strong>
+            <pre><code>mount | grep '/run/media/deck/SN512'</code></pre>
+        </li>
+    </ol>
+
+    <h2>Решение проблем с доступом</h2>
+    <ol>
+        <li><strong>Убедитесь, что группы и пользователи правильно настроены:</strong>
+            <pre><code>sudo groupadd webdev
+sudo usermod -aG webdev deck</code></pre>
+        </li>
+        <li><strong>Проверьте права доступа на директории и файлы:</strong>
+            <pre><code>sudo chmod 755 /run/media
+sudo chmod 755 /run/media/deck</code></pre>
+        </li>
+        <li><strong>Убедитесь, что процессы работают под правильными пользователями:</strong>
+            <pre><code>ps aux | grep nginx
+ps aux | grep php-fpm</code></pre>
+        </li>
+        <li><strong>Обновите права на файлы и директории:</strong>
+            <pre><code>sudo chown -R deck:webdev /run/media/deck/SN512/SERVER/DOMAINS/test.local
+sudo chmod -R 755 /run/media/deck/SN512/SERVER/DOMAINS/test.local</code></pre>
+        </li>
+    </ol>
+
+    <h2>Таблица файловой иерархии и прав</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Путь</th>
+                <th>Владелец</th>
+                <th>Группа</th>
+                <th>Права</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>/run/media/deck/SN512/SERVER</td>
+                <td>deck</td>
+                <td>webdev</td>
+                <td>755</td>
+            </tr>
+            <tr>
+                <td>/run/media/deck/SN512/SERVER/DOMAINS</td>
+                <td>deck</td>
+                <td>webdev</td>
+                <td>755</td>
+            </tr>
+            <tr>
+                <td>/run/media/deck/SN512/SERVER/DOMAINS/test.local</td>
+                <td>deck</td>
+                <td>webdev</td>
+                <td>755</td>
+            </tr>
+            <tr>
+                <td>/run/media/deck/SN512/SERVER/DOMAINS/test.local/index.php</td>
+                <td>deck</td>
+                <td>webdev</td>
+                <td>755</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Пользователи и группы</h2>
+    <p>На вашей системе присутствуют следующие пользователи и группы:</p>
+    <ul>
+        <li>Пользователь <strong>deck</strong> — использует для работы с файлами и папками.</li>
+        <li>Группа <strong>webdev</strong> — использует для доступа к файлам и папкам веб-сервиса.</li>
+        <li>Пользователь и группа <strong>http</strong> — используется Nginx для доступа к файлам.</li>
+        <li>PHP работает внутри контейнера Distrobox, и основной системой является <strong>main system</strong>.</li>
+    </ul>
+
+    <h2>Примечания</h2>
+    <p>При возникновении проблем с доступом убедитесь, что все директории и файлы имеют корректные права и владельцев. Убедитесь, что Nginx и PHP-FPM запускаются под правильными пользователями и группами, а также что контейнеры и основные системы настроены корректно.</p>
+</body>
+</html>
