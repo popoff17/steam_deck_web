@@ -71,35 +71,73 @@ update_permissions() {
     sudo chmod -R 755 "$1"
 }
 
-# Выполнение проверок для всех сайтов
-for site_path in "$BASE_PATH"/*; do
-    if [ -d "$site_path" ]; then
-        echo "Проверка сайта: $(basename "$site_path")"
+# Исправление прав доступа для системных директорий
+fix_system_permissions() {
+    sudo chmod 755 /run/media
+    sudo chmod 755 /run/media/deck
+}
 
-        check_user_group "$site_path" "deck" "webdev"
-        check_permissions "$site_path" "755"
+# Меню выбора
+while true; do
+    echo "Выберите опцию:"
+    echo "1 - Выполнить проверку"
+    echo "2 - Исправить права доступа"
+    echo "0 - Выход"
 
-        index_path="$site_path/index.php"
-        if [ -f "$index_path" ]; then
-            check_user_group "$index_path" "deck" "webdev"
-            check_permissions "$index_path" "755"
-        else
-            echo -e "${RED}Ошибка: index.php не найден в $site_path.${NC}"
-        fi
+    read -rp "Введите номер опции: " option
 
-        # Обновление прав доступа
-        update_permissions "$site_path"
+    if [[ "$option" == "1" ]]; then
+        # Выполнение проверок для всех сайтов
+        for site_path in "$BASE_PATH"/*; do
+            if [ -d "$site_path" ]; then
+                echo "Проверка сайта: $(basename "$site_path")"
+
+                check_user_group "$site_path" "deck" "webdev"
+                check_permissions "$site_path" "755"
+
+                index_path="$site_path/index.php"
+                if [ -f "$index_path" ]; then
+                    check_user_group "$index_path" "deck" "webdev"
+                    check_permissions "$index_path" "755"
+                else
+                    echo -e "${RED}Ошибка: index.php не найден в $site_path.${NC}"
+                fi
+
+                echo ""
+            fi
+        done
+
+        echo "Проверка процессов:"
+        check_process "nginx" "http"
+        check_process "php-fpm" "deck"
 
         echo ""
+        echo "Проверка монтирования:"
+        check_mount "/run/media/deck/SN512"
+
+        echo "Проверка завершена."
+
+    elif [[ "$option" == "2" ]]; then
+        # Обновление прав доступа для всех сайтов
+        for site_path in "$BASE_PATH"/*; do
+            if [ -d "$site_path" ]; then
+                echo "Исправление прав доступа для сайта: $(basename "$site_path")"
+                update_permissions "$site_path"
+            fi
+        done
+
+        # Исправление прав доступа для системных директорий
+        echo "Исправление прав доступа для системных директорий:"
+        fix_system_permissions
+
+        echo "Исправление завершено."
+
+    elif [[ "$option" == "0" ]]; then
+        echo "Выход из скрипта."
+        break
+    else
+        echo -e "${RED}Ошибка: Неверная опция.${NC}"
     fi
+
+    echo "" # Добавляем пустую строку перед повторным показом меню
 done
-
-echo "Проверка процессов:"
-check_process "nginx" "http"
-check_process "php-fpm" "deck"
-
-echo ""
-echo "Проверка монтирования:"
-check_mount "/run/media/deck/SN512"
-
-echo "Проверка завершена."
